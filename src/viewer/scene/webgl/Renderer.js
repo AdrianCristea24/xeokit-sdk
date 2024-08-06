@@ -31,6 +31,7 @@ const Renderer = function (scene, options) {
 
     let drawableTypeInfo = {};
     let drawables = {};
+    let drawableCache;
 
     let drawableListDirty = true;
     let stateSortDirty = true;
@@ -662,6 +663,10 @@ const Renderer = function (scene, options) {
         // Render deferred bins
         //------------------------------------------------------------------------------------------------------
 
+        if (drawable != undefined && drawable.id != undefined &&  drawable.id == 'design'){
+            drawableCache = drawable;
+        }
+
         // Opaque color with SAO
 
         if (normalDrawSAOBinLen > 0) {
@@ -671,12 +676,17 @@ const Renderer = function (scene, options) {
             }
         }
 
-        // Opaque edges
+        // Opaque edges 
+        // HERE ARE THE EDGES - Adrian Cristea
 
         if (normalEdgesOpaqueBinLen > 0) {
             for (i = 0; i < normalEdgesOpaqueBinLen; i++) {
-                normalEdgesOpaqueBin[i].drawEdgesColorOpaque(frameCtx);
+                drawable = normalEdgesOpaqueBin[i];
+                drawable.drawEdgesColorOpaque(frameCtx);
             }
+        }
+        if (drawableCache != undefined && drawableCache.id != undefined &&  drawableCache.id == 'design'){
+            drawableCache.drawEdgesColorOpaque(frameCtx);
         }
 
         // Opaque X-ray fill
@@ -717,11 +727,16 @@ const Renderer = function (scene, options) {
             if (normalFillTransparentBinLen > 0 || normalEdgesTransparentBinLen > 0) {
                 gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
             }
+
+            //HERE ARE THE EDGES CREATED - Adrian Cristea
             if (normalEdgesTransparentBinLen > 0) {
                 for (i = 0; i < normalEdgesTransparentBinLen; i++) {
                     drawable = normalEdgesTransparentBin[i];
                     drawable.drawEdgesColorTransparent(frameCtx);
                 }
+            }
+            if (drawableCache != undefined && drawableCache.id != undefined &&  drawableCache.id == 'design'){
+                drawableCache.drawEdgesColorTransparent(frameCtx);
             }
 
             // Transparent color fill
