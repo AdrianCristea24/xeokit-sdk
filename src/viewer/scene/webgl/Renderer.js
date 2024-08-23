@@ -43,6 +43,9 @@ const Renderer = function (scene, options) {
     let saoEnabled = true;
     let pbrEnabled = true;
     let colorTextureEnabled = true;
+    let renderAll = true;
+    let createAnno = true;
+
 
     const renderBufferManager = new RenderBufferManager(scene);
 
@@ -80,6 +83,18 @@ const Renderer = function (scene, options) {
     this.setSAOEnabled = function (enabled) {
         saoEnabled = enabled;
         imageDirty = true;
+    };
+
+    this.setRenderAll = function (enabled) {
+        renderAll = enabled;
+    };
+
+    this.setCreateAnno = function (enabled) {
+        createAnno = enabled;
+    };
+
+    this.getAnno = function () {
+        return createAnno;
     };
 
     this.setPBREnabled = function (enabled) {
@@ -662,8 +677,8 @@ const Renderer = function (scene, options) {
         //------------------------------------------------------------------------------------------------------
         // Render deferred bins
         //------------------------------------------------------------------------------------------------------
-
-        if (drawable != undefined && drawable.id != undefined &&  drawable.id == 'design'){
+        //Adrian Cristea
+        if (renderAll && drawable != undefined && drawable.id != undefined){
             drawableCache = drawable;
         }
 
@@ -685,7 +700,7 @@ const Renderer = function (scene, options) {
                 drawable.drawEdgesColorOpaque(frameCtx);
             }
         }
-        if (drawableCache != undefined && drawableCache.id != undefined &&  drawableCache.id == 'design'){
+        if (renderAll && drawableCache != undefined && drawableCache.id != undefined){
             drawableCache.drawEdgesColorOpaque(frameCtx);
         }
 
@@ -735,7 +750,7 @@ const Renderer = function (scene, options) {
                     drawable.drawEdgesColorTransparent(frameCtx);
                 }
             }
-            if (drawableCache != undefined && drawableCache.id != undefined &&  drawableCache.id == 'design'){
+            if (renderAll && drawableCache != undefined && drawableCache.id != undefined){
                 drawableCache.drawEdgesColorTransparent(frameCtx);
             }
 
