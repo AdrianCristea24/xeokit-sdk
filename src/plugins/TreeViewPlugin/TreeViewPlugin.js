@@ -497,51 +497,65 @@ export class TreeViewPlugin extends Plugin {
             this._collapseSwitchElement(switchElement);
         };
 
+        this._changeStructure = (target, isChecked = null) => {
+            this._muteSceneEvents = true;
+            const checkbox = target;
+
+            let visible = this._renderService.isChecked(checkbox);
+            let nodeId = this._renderService.getIdFromCheckbox(checkbox);
+
+            if (isChecked !== null){
+                visible = isChecked;
+            }
+
+            const checkedNode = this._nodeNodes[nodeId];
+ 
+            if (checkedNode) {
+                const objects = this._viewer.scene.objects;
+                let numUpdated = 0;
+
+                this._withNodeTree(checkedNode, (node) => {
+                    const objectId = node.objectId;
+                    const entity = objects[objectId];
+                    const isLeaf = (node.children.length === 0);
+                    node.numVisibleEntities = visible ? node.numEntities : 0;
+                    if (isLeaf && (visible !== node.checked)) {
+                        numUpdated++;
+                    }
+                    node.checked = visible;
+
+                    this._renderService.setCheckbox(node.nodeId, visible);
+                    
+                    if (entity) {
+                        entity.visible = visible;
+                    }
+                });
+
+                let parent = checkedNode.parent;
+                while (parent) {
+                    parent.checked = true;
+                    if (true) {
+                        parent.numVisibleEntities++;
+                    } else {
+                        parent.numVisibleEntities--;
+                    }
+
+                    this._renderService.setCheckbox(parent.nodeId, (parent.numVisibleEntities > 0));
+                    
+                    parent = parent.parent;
+                }
+                this._muteSceneEvents = false;
+            }
+
+        };
+        
+
         this._checkboxChangeHandler = (event) => {
+            console.log('checboxed');
             if (this._muteTreeEvents) {
                 return;
             }
-            this._muteSceneEvents = true;
-            const checkbox = event.target;
-            const visible = this._renderService.isChecked(checkbox);
-            const nodeId = this._renderService.getIdFromCheckbox(checkbox);
-
-            const checkedNode = this._nodeNodes[nodeId];
-            const objects = this._viewer.scene.objects;
-            let numUpdated = 0;
-            
-            this._withNodeTree(checkedNode, (node) => {
-                const objectId = node.objectId;
-                const entity = objects[objectId];
-                const isLeaf = (node.children.length === 0);
-                node.numVisibleEntities = visible ? node.numEntities : 0;
-                if (isLeaf && (visible !== node.checked)) {
-                    numUpdated++;
-                }
-                node.checked = visible;
-
-                this._renderService.setCheckbox(node.nodeId, visible);
-                
-                if (entity) {
-                    entity.visible = visible;
-                }
-            });
-
-            let parent = checkedNode.parent;
-            while (parent) {
-                parent.checked = visible;
-                
-                if (visible) {
-                    parent.numVisibleEntities += numUpdated;
-                } else {
-                    parent.numVisibleEntities -= numUpdated;
-                }
-
-                this._renderService.setCheckbox(parent.nodeId, (parent.numVisibleEntities > 0));
-                
-                parent = parent.parent;
-            }
-            this._muteSceneEvents = false;
+            this._changeStructure(event.target); 
         };
 
         this._hierarchy = cfg.hierarchy || "containment";
