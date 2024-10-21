@@ -551,10 +551,6 @@ const Renderer = function (scene, options) {
 
         const startTime = Date.now();
 
-        if (bindOutputFrameBuffer) {
-            bindOutputFrameBuffer(params.pass);
-        }
-
         if (params.clear !== false) {
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         }
@@ -578,20 +574,21 @@ const Renderer = function (scene, options) {
         let selectedEdgesOpaqueBinLen = 0;
         let selectedFillTransparentBinLen = 0;
         let selectedEdgesTransparentBinLen = 0;
+        let drawableListMy = [];
 
         //------------------------------------------------------------------------------------------------------
         // Render normal opaque solids, defer others to bins to render after
         //------------------------------------------------------------------------------------------------------
-
         for (let type in drawableTypeInfo) {
             if (drawableTypeInfo.hasOwnProperty(type)) {
 
                 const drawableInfo = drawableTypeInfo[type];
                 const drawableList = drawableInfo.drawableList;
-
+                drawableListMy = [];
                 for (i = 0, len = drawableList.length; i < len; i++) {
 
                     drawable = drawableList[i];
+                    drawableListMy.push(drawableList[i]);
 
                     if (drawable.culled === true || drawable.visible === false) {
                         continue;
@@ -674,36 +671,43 @@ const Renderer = function (scene, options) {
             }
         }
 
-        //------------------------------------------------------------------------------------------------------
-        // Render deferred bins
-        //------------------------------------------------------------------------------------------------------
-        //Adrian Cristea
-        if (renderAll && drawable != undefined && drawable.id != undefined){
-            drawableCache = drawable;
+        if (!renderAll){
+            drawableListMy = [drawableListMy[0]];
         }
 
-        // Opaque color with SAO
-
-        if (normalDrawSAOBinLen > 0) {
-            frameCtx.withSAO = true;
-            for (i = 0; i < normalDrawSAOBinLen; i++) {
-                normalDrawSAOBin[i].drawColorOpaque(frameCtx);
+        for( let k = 0; k < drawableListMy.length; k++){
+            drawable = drawableListMy[k];
+            //------------------------------------------------------------------------------------------------------
+            // Render deferred bins
+            //------------------------------------------------------------------------------------------------------
+            //Adrian Cristea
+            if (renderAll && drawable != undefined && drawable.id != undefined){
+                drawableCache = drawable;
             }
-        }
 
-        // Opaque edges 
-        // HERE ARE THE EDGES - Adrian Cristea
+            // Opaque color with SAO
 
-        if (normalEdgesOpaqueBinLen > 0) {
-            for (i = 0; i < normalEdgesOpaqueBinLen; i++) {
-                drawable = normalEdgesOpaqueBin[i];
-                drawable.drawEdgesColorOpaque(frameCtx);
+            if (normalDrawSAOBinLen > 0) {
+                frameCtx.withSAO = true;
+                for (i = 0; i < normalDrawSAOBinLen; i++) {
+                    normalDrawSAOBin[i].drawColorOpaque(frameCtx);
+                }
             }
-        }
-        if (renderAll && drawableCache != undefined && drawableCache.id != undefined){
-            drawableCache.drawEdgesColorOpaque(frameCtx);
-        }
 
+            // Opaque edges 
+            // HERE ARE THE EDGES - Adrian Cristea
+
+            if (normalEdgesOpaqueBinLen > 0) {
+                for (i = 0; i < normalEdgesOpaqueBinLen; i++) {
+                    drawable = normalEdgesOpaqueBin[i];
+                    drawable.drawEdgesColorOpaque(frameCtx);
+                }
+            }
+            if (renderAll && drawableCache != undefined && drawableCache.id != undefined){
+                drawableCache.drawEdgesColorOpaque(frameCtx);
+            }
+
+        }
         // Opaque X-ray fill
 
         if (xrayedFillOpaqueBinLen > 0) {
@@ -758,8 +762,7 @@ const Renderer = function (scene, options) {
 
             if (normalFillTransparentBinLen > 0) {
                 for (i = 0; i < normalFillTransparentBinLen; i++) {
-                    drawable = normalFillTransparentBin[i];
-                    drawable.drawColorTransparent(frameCtx);
+                    normalFillTransparentBin[i].drawColorTransparent(frameCtx);
                 }
             }
 
@@ -923,10 +926,6 @@ const Renderer = function (scene, options) {
         const numVertexAttribs = WEBGL_INFO.MAX_VERTEX_ATTRIBS; // Fixes https://github.com/xeokit/xeokit-sdk/issues/174
         for (let ii = 0; ii < numVertexAttribs; ii++) {
             gl.disableVertexAttribArray(ii);
-        }
-
-        if (unbindOutputFrameBuffer) {
-            unbindOutputFrameBuffer(params.pass);
         }
     }
 
