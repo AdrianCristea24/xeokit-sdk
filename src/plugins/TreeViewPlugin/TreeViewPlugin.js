@@ -1,5 +1,7 @@
 import {Plugin} from "../../viewer/Plugin.js";
 import {RenderService} from "./RenderService.js";
+import {AnnotationsPlugin} from "../AnnotationsPlugin";
+import {math} from "../../viewer/scene/math/math.js";
 
 const treeViews = [];
 
@@ -380,6 +382,18 @@ export class TreeViewPlugin extends Plugin {
 
         const containerElement = cfg.containerElement || document.getElementById(cfg.containerElementId);
 
+        const annotations = new AnnotationsPlugin(this.viewer, {
+            markerHTML: "<div class='annotation-marker' style='background-color: {{markerBGColor}};'>{{glyph}}</div>",
+    
+            values: {
+                markerBGColor: "black",
+                labelBGColor: "white",
+                glyph: "X",
+                title: "Untitled",
+                description: "No description"
+            }
+        });
+
         if (!(containerElement instanceof HTMLElement)) {
             this.error("Mandatory config expected: valid containerElementId or containerElement");
             return;
@@ -412,6 +426,21 @@ export class TreeViewPlugin extends Plugin {
         this._pruneEmptyNodes = cfg.pruneEmptyNodes;
         this._showListItemElementId = null;
         this._renderService = cfg.renderService || new RenderService();
+        this.ctrlPressed = false;
+        this.annotations = annotations;
+        this.anno = [];
+
+        document.body.addEventListener('keydown', (event) => {
+            if (event.key === 'Control') {
+                this.ctrlPressed = true;  // Assuming you're within a class; otherwise, handle 'this'
+            }
+        });
+
+        document.body.addEventListener('keyup', (event) => {
+            if (event.key === 'Control') {
+                this.ctrlPressed = false;
+            }
+        });
 
         if (!this._renderService) {
             throw new Error('TreeViewPlugin: no render service set');
@@ -512,16 +541,13 @@ export class TreeViewPlugin extends Plugin {
  
             if (checkedNode) {
                 const objects = this._viewer.scene.objects;
-                let numUpdated = 0;
 
                 this._withNodeTree(checkedNode, (node) => {
                     const objectId = node.objectId;
                     const entity = objects[objectId];
                     const isLeaf = (node.children.length === 0);
                     node.numVisibleEntities = visible ? node.numEntities : 0;
-                    if (isLeaf && (visible !== node.checked)) {
-                        numUpdated++;
-                    }
+                    if (isLeaf && (visible !== node.checked)) ;
                     node.checked = visible;
 
                     this._renderService.setCheckbox(node.nodeId, visible);
@@ -534,10 +560,8 @@ export class TreeViewPlugin extends Plugin {
                 let parent = checkedNode.parent;
                 while (parent) {
                     parent.checked = true;
-                    if (true) {
+                    {
                         parent.numVisibleEntities++;
-                    } else {
-                        parent.numVisibleEntities--;
                     }
 
                     this._renderService.setCheckbox(parent.nodeId, (parent.numVisibleEntities > 0));
@@ -548,10 +572,23 @@ export class TreeViewPlugin extends Plugin {
             }
 
         };
-        
+
 
         this._checkboxChangeHandler = (event) => {
             console.log('checboxed');
+
+            if (event.target){//checked
+                for (let i = this.anno.length - 1; i >= 0; i--) {
+                    let annotation = this.anno[i];
+                    this.annotations.destroyAnnotation([annotation]);
+                    this.anno.splice(i, 1);  // Remove the current annotation from the array
+                }
+
+                if (!this.ctrlPressed){
+                    this.checkIfStoreys(event.target);
+                }
+            }
+
             if (this._muteTreeEvents) {
                 return;
             }
@@ -578,6 +615,80 @@ export class TreeViewPlugin extends Plugin {
         }
 
         this.hierarchy = cfg.hierarchy;
+    }
+
+    //adrian ifcspace
+    showIfcSpaceInfo(parent) {
+        const classes = document.getElementsByClassName('xeokit-classes xeokit-tree-panel')[0].getElementsByTagName('input');
+        const switchId = parent.id.replace('checkbox-', 'switch-');
+        const id = parent.id.replace('checkbox-', '');
+        const switchElement = document.getElementById(switchId);
+        const element = document.getElementById(id);
+
+        this._expandSwitchElement(switchElement);
+
+        const ulElements = element.querySelectorAll('ul');
+        ulElements.forEach(ul => {
+            ul.querySelectorAll('li').forEach(childLi => {
+                if (childLi.id.includes('IfcSpace')){
+                    let ifcspaceSwitch = document.getElementById('switch-'+childLi.id);
+                    this._expandSwitchElement(ifcspaceSwitch);
+
+                    const liElementsIfc = childLi.querySelectorAll('li');
+
+                    liElementsIfc.forEach(li => {
+                        let objectId = li.id.split('-').pop();
+                        let entity = this.viewer.scene.objects[objectId];
+                        let aabb = entity.aabb;
+                        let entityCenter = math.getAABB3Center(aabb);
+                        let entityId = entity.id;
+
+                        this.annotations.createAnnotation({
+                            id: entity.id,
+                            entity: entity,
+                            worldPos: entityCenter,
+                            occludable: false,
+                            markerShown: true,
+                            labelShown: false,
+                
+                            values: {
+                                glyph: li.outerText,
+                            }
+                        });
+
+                        this.anno.push(entityId);
+                    });
+                    this._collapseSwitchElement(ifcspaceSwitch);
+                }
+            });
+        });
+        this._collapseSwitchElement(switchElement);
+    }
+
+    checkIfStoreys(target) {
+        const storeys = document.getElementsByClassName('xeokit-storeys xeokit-tree-panel')[0].getElementsByTagName('input');
+        const targetInitialState = target.checked;
+        Array.from(storeys).forEach((storey) => {
+            if (storey.id == target.id) {
+                Array.from(storeys).forEach((storeyDuplicate, index) => {
+                    if (storeyDuplicate.id == target.id) {
+                        this._changeStructure(storeyDuplicate, targetInitialState);
+
+                        if (targetInitialState){
+                            console.log('showIFC');
+                            this.showIfcSpaceInfo(storeyDuplicate);
+                        }
+
+                    }
+                    else if (targetInitialState == true){
+                        this._changeStructure(storeyDuplicate, false);
+                    }
+                    
+                });
+                return true;
+            }
+        });
+        return false;
     }
 
     /**
@@ -750,7 +861,7 @@ export class TreeViewPlugin extends Plugin {
             return;
         }
 
-        this._renderService.setHighlighted(this._showListItemElementId, false)
+        this._renderService.setHighlighted(this._showListItemElementId, false);
         
         this._showListItemElementId = null;
     }
@@ -1367,7 +1478,7 @@ export class TreeViewPlugin extends Plugin {
             return this._createNodeElement(node);
         });
 
-        this._renderService.addChildren(switchElement, nodeElements)
+        this._renderService.addChildren(switchElement, nodeElements);
 
         this._renderService.expand(switchElement, this._switchExpandHandler, this._switchCollapseHandler);
     }
