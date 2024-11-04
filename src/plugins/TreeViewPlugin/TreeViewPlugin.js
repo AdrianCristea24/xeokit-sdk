@@ -619,7 +619,7 @@ export class TreeViewPlugin extends Plugin {
 
     //adrian ifcspace
     showIfcSpaceInfo(parent) {
-        const classes = document.getElementsByClassName('xeokit-classes xeokit-tree-panel')[0].getElementsByTagName('input');
+        document.getElementsByClassName('xeokit-classes xeokit-tree-panel')[0].getElementsByTagName('input');
         const switchId = parent.id.replace('checkbox-', 'switch-');
         const id = parent.id.replace('checkbox-', '');
         const switchElement = document.getElementById(switchId);
@@ -652,7 +652,7 @@ export class TreeViewPlugin extends Plugin {
                             labelShown: false,
                 
                             values: {
-                                glyph: li.outerText,
+                                glyph: li.outerText  + "<br>" + entity.surfaceArea.toFixed(2) + " m²",
                             }
                         });
 
