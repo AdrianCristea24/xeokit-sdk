@@ -206,6 +206,11 @@ class Annotation extends Marker {
      * @private
      */
     _updatePosition() {
+        const htmlElement = document.getElementsByTagName('html')[0];
+        const style = window.getComputedStyle(htmlElement);
+        const mainMenuWidth = style.getPropertyValue('--main-menu-width').trim();
+        const mainMenuWidthNumber = parseInt(mainMenuWidth, 10);
+
         const px = x => x + "px";
         const boundary = this.scene.canvas.boundary;
         const left = boundary[0] + this.canvasPos[0];
@@ -213,9 +218,9 @@ class Annotation extends Marker {
         const markerRect = this._marker.getBoundingClientRect();
         const markerWidth = markerRect.width;
         const markerDir = (this._markerAlign === "right") ? -1 : ((this._markerAlign === "center") ? 0 : 1);
-        const markerCenter = left + markerDir * (markerWidth / 2 - 12);
+        const markerCenter = left + markerDir * (markerWidth / 2 - 12) + mainMenuWidthNumber;
         this._marker.style.left = px(markerCenter - markerWidth / 2);
-        this._marker.style.top  = px(top - 12);
+        this._marker.style.top  = px(top + 100);
         this._marker.style["z-index"] = 90005 + Math.floor(this._viewPos[2]) + 1;
 
         const labelRect = this._label.getBoundingClientRect();

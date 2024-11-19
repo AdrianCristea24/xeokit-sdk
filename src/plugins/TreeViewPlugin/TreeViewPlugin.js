@@ -383,7 +383,7 @@ export class TreeViewPlugin extends Plugin {
         const containerElement = cfg.containerElement || document.getElementById(cfg.containerElementId);
 
         const annotations = new AnnotationsPlugin(this.viewer, {
-            markerHTML: "<div class='annotation-marker' style='background-color: {{markerBGColor}};'>{{glyph}}</div>",
+            markerHTML: "<div class='annotation-marker-two'>{{glyph}}</div>",
     
             values: {
                 markerBGColor: "black",
