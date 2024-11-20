@@ -153,7 +153,7 @@ class Annotation extends Marker {
     _buildHTML() {
         if (!this._markerExternal) {
             if (this._marker) {
-                this._container.removeChild(this._marker);
+                //this._container.removeChild(this._marker); //comment for the append ERROR
                 this._marker = null;
             }
             let markerHTML = this._markerHTML || "<p></p>"; // Make marker
@@ -218,9 +218,9 @@ class Annotation extends Marker {
         const markerRect = this._marker.getBoundingClientRect();
         const markerWidth = markerRect.width;
         const markerDir = (this._markerAlign === "right") ? -1 : ((this._markerAlign === "center") ? 0 : 1);
-        const markerCenter = left + markerDir * (markerWidth / 2 - 12) + mainMenuWidthNumber;
-        this._marker.style.left = px(markerCenter - markerWidth / 2);
-        this._marker.style.top  = px(top + 100);
+        const markerCenter = left + markerDir * (markerWidth / 2 - 12);
+        this._marker.style.left = px(markerCenter - markerWidth / 2 - 10);
+        this._marker.style.top  = px(top - 20);
         this._marker.style["z-index"] = 90005 + Math.floor(this._viewPos[2]) + 1;
 
         const labelRect = this._label.getBoundingClientRect();
@@ -229,6 +229,29 @@ class Annotation extends Marker {
         this._label.style.left = px(markerCenter + labelDir * (markerWidth / 2 + Math.abs(this._labelPosition) + labelWidth / 2) - labelWidth / 2);
         this._label.style.top  = px(top - 17);
         this._label.style["z-index"] = 90005 + Math.floor(this._viewPos[2]) + 1;
+
+        let anno = document.getElementsByClassName('annotation-marker');
+        let annoTwo = document.getElementsByClassName('annotation-marker-two');
+        let container = document.getElementsByClassName("op-ifc-viewer--container xeokit-busy-modal-backdrop")[0];
+
+        if (container) {
+            [anno, annoTwo].forEach(collection => {
+                Array.from(collection).forEach(element => {
+                    if (element instanceof Node) {
+                        // Check if the element's parent is not the container itself
+                        if (element.parentNode && element.parentNode !== container) {
+                            try {
+                                container.appendChild(element);
+                            } catch (error) {
+                                console.warn("Error appending element:", error, element);
+                            }
+                        }
+                    } 
+                });
+            });
+        } else {
+            console.warn("Container not found.");
+        }
     }
 
     /**
