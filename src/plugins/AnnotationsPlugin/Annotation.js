@@ -238,15 +238,26 @@ class Annotation extends Marker {
             [anno, annoTwo].forEach(collection => {
                 Array.from(collection).forEach(element => {
                     if (element instanceof Node) {
-                        // Check if the element's parent is not the container itself
-                        if (element.parentNode && element.parentNode !== container) {
-                            try {
-                                container.appendChild(element);
-                            } catch (error) {
-                                console.warn("Error appending element:", error, element);
-                            }
+                        const style = element.style;
+
+                        // Remove the element if 'left' or 'z-index' is missing
+                        if (!style.left || !style.zIndex) {
+                            if (element.parentNode) {
+                                element.parentNode.removeChild(element);
+                            } 
+                            return; // Skip to the next element
                         }
-                    } 
+
+                        try {
+                            // Move the valid element to the container (no duplicates)
+                            container.appendChild(element);
+                        } catch (error) {
+                            console.warn("Error moving element:", error, element);
+                        }
+                        
+                    } else {
+                        console.warn("Invalid element found:", element);
+                    }
                 });
             });
         } else {

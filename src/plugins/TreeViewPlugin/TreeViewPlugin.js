@@ -526,6 +526,15 @@ export class TreeViewPlugin extends Plugin {
             this._collapseSwitchElement(switchElement);
         };
 
+        this._delete2DAnno = () => {
+            for (let i = this.anno.length - 1; i >= 0; i--) {
+                let annotation = this.anno[i];
+                this.annotations.destroyAnnotation([annotation]);
+                this.anno.splice(i, 1);  // Remove the current annotation from the array
+            }
+            return this.anno;
+        };
+
         this._changeStructure = (target, isChecked = null) => {
             this._muteSceneEvents = true;
             const checkbox = target;
@@ -665,7 +674,7 @@ export class TreeViewPlugin extends Plugin {
         this._collapseSwitchElement(switchElement);
     }
 
-    checkIfStoreys(target) {
+    checkIfStoreys(target, force2D = false) {
         const storeys = document.getElementsByClassName('xeokit-storeys xeokit-tree-panel')[0].getElementsByTagName('input');
         const targetInitialState = target.checked;
         Array.from(storeys).forEach((storey) => {
@@ -673,9 +682,9 @@ export class TreeViewPlugin extends Plugin {
                 Array.from(storeys).forEach((storeyDuplicate, index) => {
                     if (storeyDuplicate.id == target.id) {
                         this._changeStructure(storeyDuplicate, targetInitialState);
-
-                        if (targetInitialState){
-                            console.log('showIFC');
+                        let threeD = document.getElementsByClassName("xeokit-i18n xeokit-threeD xeokit-btn fa fa-cube fa-2x active")[0];
+                        if (targetInitialState && (!threeD || force2D)){
+                            console.log('showIFCspaceInfo');
                             this.showIfcSpaceInfo(storeyDuplicate);
                         }
 
