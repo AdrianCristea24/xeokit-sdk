@@ -26,8 +26,7 @@ class AngleMeasurement extends Component {
          * @type {AngleMeasurementsPlugin}
          */
         this.plugin = plugin;
-
-        this._container = cfg.container;
+        this._container = document.getElementsByClassName("op-ifc-viewer--container xeokit-busy-modal-backdrop")[0] || cfg.container;
         if (!this._container) {
             throw "config missing: container";
         }
@@ -77,7 +76,7 @@ class AngleMeasurement extends Component {
 
         this._originDot = new Dot3D(scene, cfg.origin, this._container, {
             fillColor: this._color,
-            zIndex: plugin.zIndex !== undefined ? plugin.zIndex + 2 : undefined,
+            zIndex: 0,//plugin.zIndex !== undefined ? plugin.zIndex + 2 : undefined,
             onMouseOver,
             onMouseLeave,
             onMouseWheel,
@@ -88,7 +87,7 @@ class AngleMeasurement extends Component {
         });
         this._cornerDot = new Dot3D(scene, cfg.corner, this._container, {
             fillColor: this._color,
-            zIndex: plugin.zIndex !== undefined ? plugin.zIndex + 2 : undefined,
+            zIndex: 0,//plugin.zIndex !== undefined ? plugin.zIndex + 2 : undefined,
             onMouseOver,
             onMouseLeave,
             onMouseWheel,
@@ -99,7 +98,7 @@ class AngleMeasurement extends Component {
         });
         this._targetDot = new Dot3D(scene, cfg.target, this._container, {
             fillColor: this._color,
-            zIndex: plugin.zIndex !== undefined ? plugin.zIndex + 2 : undefined,
+            zIndex: 0,//plugin.zIndex !== undefined ? plugin.zIndex + 2 : undefined,
             onMouseOver,
             onMouseLeave,
             onMouseWheel,
@@ -112,7 +111,7 @@ class AngleMeasurement extends Component {
         this._originWire = new Wire(this._container, {
             color: this._color || "blue",
             thickness: 1,
-            zIndex: plugin.zIndex,
+            zIndex: 0,//plugin.zIndex,
             onMouseOver,
             onMouseLeave,
             onMouseWheel,
@@ -124,7 +123,7 @@ class AngleMeasurement extends Component {
         this._targetWire = new Wire(this._container, {
             color: this._color || "red",
             thickness: 1,
-            zIndex: plugin.zIndex !== undefined ? plugin.zIndex + 1 : undefined,
+            zIndex: 0,//plugin.zIndex !== undefined ? plugin.zIndex + 1 : undefined,
             onMouseOver,
             onMouseLeave,
             onMouseWheel,
@@ -138,7 +137,7 @@ class AngleMeasurement extends Component {
             fillColor: this._color || "#00BBFF",
             prefix: "",
             text: "",
-            zIndex: plugin.zIndex + 2,
+            zIndex: 0,
             onMouseOver,
             onMouseLeave,
             onMouseWheel,

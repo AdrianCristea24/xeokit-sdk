@@ -26,7 +26,7 @@ class Annotation extends Marker {
          */
         this.plugin = cfg.plugin;
 
-        this._container = cfg.container;
+        this._container =  document.getElementsByClassName("op-ifc-viewer--container xeokit-busy-modal-backdrop")[0] || cfg.container;
         if (!this._container) {
             throw "config missing: container";
         }
@@ -96,6 +96,7 @@ class Annotation extends Marker {
                 this._marker.style.visibility = (this.visible && this._markerShown) ? "visible" : "hidden";
                 this._label.style.visibility = (this.visible && this._markerShown && this._labelShown) ? "visible" : "hidden";
                 this._visibilityDirty = false;
+                this._getShowingLabels();
             }
         });
 
@@ -202,14 +203,34 @@ class Annotation extends Marker {
         }
     }
 
+
+    _getShowingLabels() {
+        const annoTwo = document.getElementsByClassName('annotation-marker-two');
+        let visibleCount = 0;
+    
+        Array.from(annoTwo).forEach(element => {
+            // Remove elements with no zIndex defined
+            if (element.style.zIndex === '') {
+                element.remove();
+            } else if (element.style.visibility === 'visible') {
+                if (visibleCount < 20) {
+                    visibleCount++;
+                } else {
+                    // Hide excess visible elements immediately
+                    element.style.visibility = 'hidden';
+                }
+            }
+        });
+    
+    }
+
     /**
      * @private
      */
     _updatePosition() {
         const htmlElement = document.getElementsByTagName('html')[0];
         const style = window.getComputedStyle(htmlElement);
-        const mainMenuWidth = style.getPropertyValue('--main-menu-width').trim();
-        const mainMenuWidthNumber = parseInt(mainMenuWidth, 10);
+        style.getPropertyValue('--main-menu-width').trim();
 
         const px = x => x + "px";
         const boundary = this.scene.canvas.boundary;
@@ -221,20 +242,18 @@ class Annotation extends Marker {
         const markerCenter = left + markerDir * (markerWidth / 2 - 12);
         this._marker.style.left = px(markerCenter - markerWidth / 2 - 10);
         this._marker.style.top  = px(top - 20);
-        this._marker.style["z-index"] = 90005 + Math.floor(this._viewPos[2]) + 1;
+        this._marker.style["z-index"] = 0;//90005 + Math.floor(this._viewPos[2]) + 1;
 
         const labelRect = this._label.getBoundingClientRect();
         const labelWidth = labelRect.width;
         const labelDir = Math.sign(this._labelPosition);
         this._label.style.left = px(markerCenter + labelDir * (markerWidth / 2 + Math.abs(this._labelPosition) + labelWidth / 2) - labelWidth / 2);
         this._label.style.top  = px(top - 17);
-        this._label.style["z-index"] = 90005 + Math.floor(this._viewPos[2]) + 1;
+        this._label.style["z-index"] = 0;//90005 + Math.floor(this._viewPos[2]) + 1;
 
         let anno = document.getElementsByClassName('annotation-marker');
         let annoTwo = document.getElementsByClassName('annotation-marker-two');
-        let container = document.getElementsByClassName("op-ifc-viewer--container xeokit-busy-modal-backdrop")[0];
-
-        if (container) {
+        if (anno && annoTwo) {
             [anno, annoTwo].forEach(collection => {
                 Array.from(collection).forEach(element => {
                     if (element instanceof Node) {
@@ -246,13 +265,6 @@ class Annotation extends Marker {
                                 element.parentNode.removeChild(element);
                             } 
                             return; // Skip to the next element
-                        }
-
-                        try {
-                            // Move the valid element to the container (no duplicates)
-                            container.appendChild(element);
-                        } catch (error) {
-                            console.warn("Error moving element:", error, element);
                         }
                         
                     } else {
@@ -287,10 +299,10 @@ class Annotation extends Marker {
         if (!pickResult.worldPos || !pickResult.worldNormal) {
             this.error("Param 'pickResult' does not have both worldPos and worldNormal");
         } else {
-            const normalizedWorldNormal = math.normalizeVec3(pickResult.worldNormal, tempVec3a);
+            const normalizedWorldNormal = math.normalizeVec3(pickResult.worldNormal, tempVec3a$K);
             const offset = (this.plugin && this.plugin.surfaceOffset) || 0;
-            const offsetVec = math.mulVec3Scalar(normalizedWorldNormal, offset, tempVec3b);
-            const offsetWorldPos = math.addVec3(pickResult.worldPos, offsetVec, tempVec3c);
+            const offsetVec = math.mulVec3Scalar(normalizedWorldNormal, offset, tempVec3b$z);
+            const offsetWorldPos = math.addVec3(pickResult.worldPos, offsetVec, tempVec3c$v);
             this.entity = pickResult.entity;
             this.worldPos = offsetWorldPos;
         }

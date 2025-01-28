@@ -527,11 +527,11 @@ export class TreeViewPlugin extends Plugin {
         };
 
         this._delete2DAnno = () => {
-            for (let i = this.anno.length - 1; i >= 0; i--) {
-                let annotation = this.anno[i];
+            let annoCopy = [...this.anno]; // Clone the array
+            annoCopy.forEach(annotation => {
                 this.annotations.destroyAnnotation([annotation]);
-                this.anno.splice(i, 1);  // Remove the current annotation from the array
-            }
+            });
+            this.anno.length = 0; // Clear the original array
             return this.anno;
         };
 
@@ -587,11 +587,11 @@ export class TreeViewPlugin extends Plugin {
             console.log('checboxed');
 
             if (event.target){//checked
-                for (let i = this.anno.length - 1; i >= 0; i--) {
-                    let annotation = this.anno[i];
+                let annoCopy = [...this.anno]; // Clone the array
+                annoCopy.forEach(annotation => {
                     this.annotations.destroyAnnotation([annotation]);
-                    this.anno.splice(i, 1);  // Remove the current annotation from the array
-                }
+                });
+                this.anno.length = 0; // Clear the original array
 
                 if (!this.ctrlPressed){
                     this.checkIfStoreys(event.target);
@@ -635,7 +635,6 @@ export class TreeViewPlugin extends Plugin {
         const element = document.getElementById(id);
 
         this._expandSwitchElement(switchElement);
-
         const ulElements = element.querySelectorAll('ul');
         ulElements.forEach(ul => {
             ul.querySelectorAll('li').forEach(childLi => {
@@ -643,7 +642,9 @@ export class TreeViewPlugin extends Plugin {
                     let ifcspaceSwitch = document.getElementById('switch-'+childLi.id);
                     this._expandSwitchElement(ifcspaceSwitch);
 
-                    const liElementsIfc = childLi.querySelectorAll('li');
+                    let liElementsIfc = Array.from(childLi.querySelectorAll('li')); // Convert NodeList to Array
+                    //let halfSize = Math.ceil(liElementsIfc.length / 2); // Calculate midpoint
+                    //const firstHalf = liElementsIfc.slice(0, halfSize); // Take the first half
 
                     liElementsIfc.forEach(li => {
                         let objectId = li.id.split('-').pop();

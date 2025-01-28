@@ -294,8 +294,7 @@ class DistanceMeasurementsPlugin extends Plugin {
 
     this._pointerLens = cfg.pointerLens;
 
-    this._container = cfg.container || document.body;
-
+    this._container = document.getElementsByClassName("op-ifc-viewer--container xeokit-busy-modal-backdrop")[0] || (cfg.container || document.body); //cfg.container || document.body;
     this._defaultControl = null;
 
     this._measurements = {};
@@ -315,10 +314,11 @@ class DistanceMeasurementsPlugin extends Plugin {
     this.defaultYAxisVisible = cfg.defaultYAxisVisible !== false;
     this.defaultZAxisVisible = cfg.defaultZAxisVisible !== false;
     this.defaultColor =cfg.defaultColor !== undefined ? cfg.defaultColor : "#00BBFF";
-    this.zIndex = cfg.zIndex || 10000;
+    this.zIndex = 0;//cfg.zIndex || 10000;
     this.defaultLabelsOnWires = cfg.defaultLabelsOnWires !== false;
     this.useRotationAdjustment = cfg.useRotationAdjustment !== undefined ? cfg.useRotationAdjustment !== false : false;
-
+    console.log('zIndex', this.zIndex);
+    
     this._onMouseOver = (event, measurement) => {
       this.fire("mouseOver", {
         plugin: this,

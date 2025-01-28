@@ -32,6 +32,7 @@ const Renderer = function (scene, options) {
     let drawableTypeInfo = {};
     let drawables = {};
     let drawableCache;
+    let desginElement = [];
 
     let drawableListDirty = true;
     let stateSortDirty = true;
@@ -574,7 +575,7 @@ const Renderer = function (scene, options) {
         let selectedEdgesOpaqueBinLen = 0;
         let selectedFillTransparentBinLen = 0;
         let selectedEdgesTransparentBinLen = 0;
-        let drawableListMy = [];
+        drawableCache = {};
 
         //------------------------------------------------------------------------------------------------------
         // Render normal opaque solids, defer others to bins to render after
@@ -584,11 +585,17 @@ const Renderer = function (scene, options) {
 
                 const drawableInfo = drawableTypeInfo[type];
                 const drawableList = drawableInfo.drawableList;
-                drawableListMy = [];
+
                 for (i = 0, len = drawableList.length; i < len; i++) {
 
                     drawable = drawableList[i];
-                    drawableListMy.push(drawableList[i]);
+                    if (drawableList[i].id[0] != '_') { // KEEP THE ORIGINAL RENDER SET
+                        const idExists = desginElement.some(element => element.id === drawableList[i].id);
+                        if (!idExists) { // Push only if the obj does not already exist
+                            desginElement.push(drawableList[i]);
+                        }
+                    }
+
 
                     if (drawable.culled === true || drawable.visible === false) {
                         continue;
@@ -672,11 +679,11 @@ const Renderer = function (scene, options) {
         }
 
         if (!renderAll){
-            drawableListMy = [drawableListMy[0]];
+            desginElement = [desginElement[0]];
         }
 
-        for( let k = 0; k < drawableListMy.length; k++){
-            drawable = drawableListMy[k];
+        for( let k = 0; k < desginElement.length; k++){
+            drawable = desginElement[k];
             //------------------------------------------------------------------------------------------------------
             // Render deferred bins
             //------------------------------------------------------------------------------------------------------
@@ -684,6 +691,7 @@ const Renderer = function (scene, options) {
             if (renderAll && drawable != undefined && drawable.id != undefined){
                 drawableCache = drawable;
             }
+            
 
             // Opaque color with SAO
 
